@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multi-Currency Wallet — Learning Prototype</title>
+<style>
+:root{--navy:#12304a;--blue:#1769aa;--pale:#edf5fb;--green:#13805c;--red:#b42318;--ink:#172b3a;--muted:#647789;--border:#d7e1e9;--white:#fff}*{box-sizing:border-box}body{margin:0;background:#f3f7fa;color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}.top{background:var(--navy);color:white;padding:18px 22px}.top-inner{max-width:1100px;margin:auto;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{font-weight:800;font-size:19px}.brand small{display:block;font-size:12px;font-weight:400;color:#c8d9e7}.wrap{max-width:1100px;margin:24px auto;padding:0 16px}.banner{background:#fff8e8;border:1px solid #e8d29d;color:#684d0b;border-radius:10px;padding:12px 15px;margin-bottom:18px;font-size:13px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.toolbar select,.toolbar button,.btn{border:1px solid var(--border);border-radius:8px;padding:9px 12px;background:white;color:var(--ink);font:inherit}.toolbar button,.btn.primary{background:var(--blue);color:white;border-color:var(--blue);cursor:pointer;font-weight:700}.toolbar button:hover,.btn.primary:hover{filter:brightness(.94)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}.card{background:white;border:1px solid var(--border);border-radius:12px;padding:16px;box-shadow:0 3px 12px #18334b08}.currency{font-size:12px;color:var(--muted);font-weight:700}.amount{font-size:24px;font-weight:800;margin-top:5px}.section-title{font-size:18px;margin:0 0 12px}.columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}.field label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin-bottom:4px}.field input,.field select{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:#fff;font:inherit}.field.full{grid-column:1/-1}.summary{background:var(--pale);border:1px solid #cfe2f0;border-radius:9px;padding:12px;margin-top:12px;font-size:13px}.summary div{display:flex;justify-content:space-between;gap:12px;padding:3px 0}.error{color:var(--red);font-size:13px;margin-top:10px}.success{color:var(--green);font-size:13px;margin-top:10px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:10px 9px;border-bottom:1px solid #e6edf2;text-align:left;white-space:nowrap}th{color:var(--muted);font-size:11px;text-transform:uppercase;background:#f8fafc}.pill{display:inline-block;padding:3px 8px;border-radius:99px;background:#e7f5ed;color:#176343;font-size:11px;font-weight:700}.muted{color:var(--muted);font-size:12px}.admin-only{display:none}.receipt{display:none;position:fixed;inset:0;background:#0b1926aa;align-items:center;justify-content:center;padding:15px}.receipt-box{background:white;max-width:480px;width:100%;padding:22px;border-radius:14px}.receipt-box h2{margin-top:0}.receipt-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.receipt-actions button{padding:8px 12px;border-radius:7px;border:1px solid var(--border);cursor:pointer}.footer{text-align:center;color:#738494;font-size:12px;padding:24px}.rate-list{font-size:13px;line-height:1.8}.hidden{display:none!important}@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.columns{grid-template-columns:1fr}}@media(max-width:450px){.grid{grid-template-columns:1fr 1fr}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}.top-inner{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<header class="top"><div class="top-inner"><div class="brand">Pocket FX <small>Multi-currency wallet · learning prototype</small></div><div class="toolbar"><label for="userSelect">Demo user</label><select id="userSelect" aria-label="Select demo user"></select><button id="resetBtn" type="button" title="Restore demonstration data">Reset demo</button></div></div></header>
+<main class="wrap">
+<div class="banner"><b>Educational simulation only.</b> Balances, exchange rates, fees, and transactions are fictitious. This prototype does not connect to banks, cards, or Mobile Money and must not be used for real funds.</div>
+<div class="toolbar"><span id="welcome" class="muted"></span><span id="adminBadge" class="pill admin-only">Administrator view</span></div>
+<section><h2 class="section-title">Your wallets</h2><div id="wallets" class="grid"></div></section>
+<div class="columns">
+<section class="card" id="transferCard"><h2 class="section-title">Simulate a transfer or conversion</h2>
+<form id="transferForm"><div class="form-grid">
+<div class="field"><label for="recipient">Recipient</label><select id="recipient" required></select></div>
+<div class="field"><label for="sourceCurrency">You pay in</label><select id="sourceCurrency" required></select></div>
+<div class="field"><label for="destinationCurrency">Recipient receives in</label><select id="destinationCurrency" required></select></div>
+<div class="field"><label for="amount">Transfer amount</label><input id="amount" type="number" min="0.01" step="0.01" placeholder="For example, 10000" required></div>
+<div class="field full"><div id="calculation" class="summary">Enter an amount to preview the calculation. Confirmed transactions use the displayed sample rate.</div></div>
+<div class="field full"><button class="btn primary" type="submit">Confirm simulated transfer</button><div id="formMessage" role="status"></div></div>
+</div></form></section>
+<section class="card"><h2 class="section-title">Sample exchange rates</h2><p class="muted">Rate convention: one unit of source currency converts to the displayed destination amount.</p><div id="rates" class="rate-list"></div><div id="adminRates" class="admin-only"><hr><p class="muted">Administrator demo: update the XAF → USD sample rate.</p><div class="field"><label for="rateInput">1 XAF = USD</label><input id="rateInput" type="number" min="0.000001" step="0.00001"></div><button id="saveRate" class="btn primary" type="button" style="margin-top:8px">Save sample rate</button></div></section>
+</div>
+<section class="card" style="margin-top:16px"><h2 class="section-title">Transaction history</h2><div class="table-wrap"><table><thead><tr><th>Reference / time</th><th>Sender</th><th>Recipient</th><th>Transfer</th><th>Rate</th><th>Fee + tax</th><th>Status</th></tr></thead><tbody id="history"></tbody></table></div><p id="emptyHistory" class="muted hidden">No transactions yet. Complete a simulated transfer to see it here.</p></section>
+<section class="card admin-only" id="adminSummary" style="margin-top:16px"><h2 class="section-title">Administrator summary</h2><div id="summaryText" class="muted"></div></section>
+</main>
+<div class="footer">Prototype for INF151 learning purposes · Decimal-style integer arithmetic is used for calculations · No real funds</div>
+<div class="receipt" id="receiptModal" role="dialog" aria-modal="true"><div class="receipt-box"><h2>Transaction receipt</h2><div id="receiptContent"></div><div class="receipt-actions"><button id="printReceipt" type="button">Print receipt</button><button id="closeReceipt" type="button">Close</button></div></div></div>
+<script>
+(() => {
+  'use strict';
+  const CURRENCIES = ['XAF','USD','EUR','NGN'];
+  // Demonstration rates only. Convention: 1 source unit = rate destination units.
+  const DEFAULT_RATES = {
+    'XAF:USD': 0.00170, 'XAF:EUR': 0.00152, 'XAF:NGN': 2.287,
+    'USD:XAF': 588.72, 'USD:EUR': 0.90, 'USD:NGN': 1345.95,
+    'EUR:XAF': 655.96, 'EUR:USD': 1.11, 'EUR:NGN': 1500.60,
+    'NGN:XAF': 0.437, 'NGN:USD': 0.00074, 'NGN:EUR': 0.00067
+  };
+  const SEED = {
+    users: [
+      {id:'u1',name:'Alex Customer',role:'Customer'},
+      {id:'u2',name:'Demo Merchant',role:'Merchant'},
+      {id:'u3',name:'Sam Customer',role:'Customer'},
+      {id:'admin',name:'Demo Administrator',role:'Administrator'}
+    ],
+    balances: {
+      u1:{XAF:50000000,USD:250000,EUR:100000,NGN:0},
+      u2:{XAF:0,USD:0,EUR:0,NGN:0},
+      u3:{XAF:10000000,USD:0,EUR:0,NGN:0},
+      admin:{XAF:0,USD:0,EUR:0,NGN:0}
+    },
+    rates: DEFAULT_RATES,
+    transactions: []
+  };
+  const STORAGE_KEY = 'inf151_wallet_prototype_v1';
+  let state = loadState();
+  const $ = (id) => document.getElementById(id);
+
+  function loadState(){
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.users && parsed.balances && parsed.rates && parsed.transactions) return parsed;
+      }
+    } catch (e) { console.warn('Could not load saved demo state', e); }
+    return structuredClone(SEED);
+  }
+  function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  function currentUser(){ return state.users.find(u => u.id === $('userSelect').value) || state.users[0]; }
+  function amountUnits(value, currency){
+    // Use integer minor units: XAF/NGN whole units, USD/EUR cents.
+    const decimals = (currency === 'XAF' || currency === 'NGN') ? 0 : 2;
+    const scale = 10 ** decimals;
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return 0;
+    return Math.round(n * scale);
+  }
+  function fromUnits(units, currency){
+    const decimals = (currency === 'XAF' || currency === 'NGN') ? 0 : 2;
+    return units / (10 ** decimals);
+  }
+  function fmt(value, currency){
+    const decimals = (currency === 'XAF' || currency === 'NGN') ? 0 : 2;
+    return new Intl.NumberFormat('en-US',{minimumFractionDigits:decimals,maximumFractionDigits:decimals}).format(value) + ' ' + currency;
+  }
+  function rate(source,destination){
+    if (source === destination) return 1;
+    return Number(state.rates[`${source}:${destination}`] || 0);
+  }
+  function recipientOptions(){
+    const me = currentUser();
+    return state.users.filter(u => u.id !== me.id && u.role !== 'Administrator');
+  }
+  function fillSelect(select, values, selected){
+    select.innerHTML = '';
+    values.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.value; option.textContent = item.label;
+      if (item.value === selected) option.selected = true;
+      select.appendChild(option);
+    });
+  }
+  function render(){
+    const user = currentUser();
+    $('welcome').textContent = `Signed in as ${user.name} · ${user.role}`;
+    const isAdmin = user.role === 'Administrator';
+    document.querySelectorAll('.admin-only').forEach(el => el.style.display = isAdmin ? (el.id === 'adminBadge' ? 'inline-block' : 'block') : 'none');
+    $('transferCard').style.display = isAdmin ? 'none' : 'block';
+    const balances = state.balances[user.id] || {};
+    $('wallets').innerHTML = CURRENCIES.map(code => `<article class="card"><div class="currency">${code} WALLET</div><div class="amount">${fmt(fromUnits(balances[code] || 0, code), code)}</div></article>`).join('');
+    fillSelect($('recipient'), recipientOptions().map(u=>({value:u.id,label:`${u.name} (${u.role})`})), recipientOptions()[0]?.id);
+    const currencyOptions = CURRENCIES.map(c=>({value:c,label:c}));
+    fillSelect($('sourceCurrency'),currencyOptions,'XAF');
+    fillSelect($('destinationCurrency'),currencyOptions,'USD');
+    renderRates(); renderHistory(); renderPreview();
+    $('rateInput').value = state.rates['XAF:USD'];
+  }
+  function renderRates(){
+    const pairs = [['XAF','USD'],['XAF','EUR'],['XAF','NGN'],['USD','XAF'],['EUR','XAF'],['NGN','XAF']];
+    $('rates').innerHTML = pairs.map(([a,b])=>`<div>1 ${a} = <b>${state.rates[`${a}:${b}`]}</b> ${b}</div>`).join('');
+  }
+  function calculate(){
+    const source = $('sourceCurrency').value;
+    const dest = $('destinationCurrency').value;
+    const input = Number($('amount').value);
+    const sourceUnits = amountUnits(input,source);
+    const amount = fromUnits(sourceUnits,source);
+    const fx = rate(source,dest);
+    if (!sourceUnits || !fx) return null;
+    // Assumption for this student prototype: 2.5% fee plus fixed 100 XAF,
+    // converted into source currency using the configured XAF->source rate.
+    const fixedXafInSource = source === 'XAF' ? 100 : 100 / rate('XAF',source);
+    const fee = amount * 0.025 + fixedXafInSource;
+    const tax = fee * 0.1925;
+    const feeUnits = Math.round(fee * (10 ** ((source==='XAF'||source==='NGN')?0:2)));
+    const taxUnits = Math.round(tax * (10 ** ((source==='XAF'||source==='NGN')?0:2)));
+    const debitUnits = sourceUnits + feeUnits + taxUnits;
+    const convertedRaw = amount * fx;
+    const destScale = (dest==='XAF'||dest==='NGN') ? 1 : 100;
+    const convertedUnits = Math.round(convertedRaw * destScale);
+    const recipient = state.users.find(u=>u.id === $('recipient').value);
+    const merchantCommissionUnits = recipient && recipient.role === 'Merchant' ? Math.round(convertedUnits * 0.01) : 0;
+    const receivedUnits = convertedUnits - merchantCommissionUnits;
+    return {source,dest,sourceUnits,amount,fx,feeUnits,taxUnits,debitUnits,convertedUnits,merchantCommissionUnits,receivedUnits,recipient};
+  }
+  function renderPreview(){
+    const c = calculate();
+    if (!c){ $('calculation').textContent='Enter a positive amount and select a supported currency pair.'; return; }
+    const scale = (c.source==='XAF'||c.source==='NGN')?1:100;
+    $('calculation').innerHTML = `<div><span>Transfer amount</span><b>${fmt(c.amount,c.source)}</b></div><div><span>Rate</span><b>1 ${c.source} = ${c.fx} ${c.dest}</b></div><div><span>Transfer fee (2.5% + converted 100 XAF)</span><b>${fmt(c.feeUnits/scale,c.source)}</b></div><div><span>Tax (19.25% of fee)</span><b>${fmt(c.taxUnits/scale,c.source)}</b></div><div><span>Total debit</span><b>${fmt(c.debitUnits/scale,c.source)}</b></div><div><span>Converted before commission</span><b>${fmt(c.convertedUnits/((c.dest==='XAF'||c.dest==='NGN')?1:100),c.dest)}</b></div>${c.merchantCommissionUnits?`<div><span>Merchant commission (1%)</span><b>${fmt(c.merchantCommissionUnits/((c.dest==='XAF'||c.dest==='NGN')?1:100),c.dest)}</b></div>`:''}<div><span>Recipient receives</span><b>${fmt(c.receivedUnits/((c.dest==='XAF'||c.dest==='NGN')?1:100),c.dest)}</b></div><div class="muted">Classroom assumption: the fixed 100 XAF fee is converted to the source currency. Rates and fees are fictional.</div>`;
+  }
+  function renderHistory(){
+    const user = currentUser();
+    const isAdmin = user.role === 'Administrator';
+    const rows = state.transactions.filter(t=>isAdmin || t.senderId===user.id || t.recipientId===user.id).slice().reverse();
+    $('emptyHistory').classList.toggle('hidden',rows.length>0);
+    $('history').innerHTML = rows.map(t=>`<tr><td>${t.reference}<br><span class="muted">${new Date(t.createdAt).toLocaleString()}</span></td><td>${nameOf(t.senderId)}</td><td>${nameOf(t.recipientId)}</td><td>${fmt(t.sourceAmount,t.sourceCurrency)} → ${fmt(t.receivedAmount,t.destinationCurrency)}</td><td>1 ${t.sourceCurrency} = ${t.rate} ${t.destinationCurrency}</td><td>${fmt(t.fee,t.sourceCurrency)} + ${fmt(t.tax,t.sourceCurrency)}</td><td><span class="pill">${t.status}</span></td></tr>`).join('');
+    const total = state.transactions.length;
+    const completed = state.transactions.filter(t=>t.status==='COMPLETED').length;
+    $('summaryText').textContent = `Total simulated transactions: ${total}. Completed: ${completed}. Current user accounts and all balances are fictitious.`;
+  }
+  function nameOf(id){ return state.users.find(u=>u.id===id)?.name || 'Unknown'; }
+  function submitTransfer(event){
+    event.preventDefault();
+    const user = currentUser();
+    const calc = calculate();
+    $('formMessage').className=''; $('formMessage').textContent='';
+    if (!calc){ showError('Enter a valid positive amount and choose a configured rate.'); return; }
+    if (!calc.recipient){ showError('Select a valid recipient.'); return; }
+    const wallet = state.balances[user.id];
+    if ((wallet[calc.source]||0) < calc.debitUnits){ showError(`Insufficient ${calc.source} balance. No balances were changed.`); return; }
+    const recipientWallet = state.balances[calc.recipient.id];
+    wallet[calc.source] -= calc.debitUnits;
+    recipientWallet[calc.dest] = (recipientWallet[calc.dest]||0) + calc.receivedUnits;
+    const t = {
+      reference:'DEMO-'+Date.now().toString(36).toUpperCase(),createdAt:new Date().toISOString(),
+      senderId:user.id,recipientId:calc.recipient.id,sourceCurrency:calc.source,destinationCurrency:calc.dest,
+      sourceAmount:calc.amount,receivedAmount:fromUnits(calc.receivedUnits,calc.dest),rate:calc.fx,
+      fee:fromUnits(calc.feeUnits,calc.source),tax:fromUnits(calc.taxUnits,calc.source),
+      commission:fromUnits(calc.merchantCommissionUnits,calc.dest),status:'COMPLETED'
+    };
+    state.transactions.push(t); saveState(); render(); showReceipt(t);
+    $('amount').value=''; renderPreview();
+    $('formMessage').className='success'; $('formMessage').textContent='Simulated transfer completed. A receipt is available.';
+  }
+  function showError(message){ $('formMessage').className='error'; $('formMessage').textContent=message; }
+  function showReceipt(t){
+    $('receiptContent').innerHTML = `<p><b>Reference:</b> ${t.reference}</p><p><b>Date:</b> ${new Date(t.createdAt).toLocaleString()}</p><p><b>From:</b> ${nameOf(t.senderId)}</p><p><b>To:</b> ${nameOf(t.recipientId)}</p><p><b>Debited transfer amount:</b> ${fmt(t.sourceAmount,t.sourceCurrency)}</p><p><b>Fee:</b> ${fmt(t.fee,t.sourceCurrency)}</p><p><b>Tax:</b> ${fmt(t.tax,t.sourceCurrency)}</p><p><b>Exchange rate:</b> 1 ${t.sourceCurrency} = ${t.rate} ${t.destinationCurrency}</p>${t.commission?`<p><b>Merchant commission:</b> ${fmt(t.commission,t.destinationCurrency)}</p>`:''}<p><b>Recipient amount:</b> ${fmt(t.receivedAmount,t.destinationCurrency)}</p><p class="muted">Educational simulation receipt — not evidence of real payment.</p>`;
+    $('receiptModal').style.display='flex';
+  }
+  function reset(){ if(!confirm('Reset all demo balances, rates, and transactions?'))return; state=structuredClone(SEED);saveState();render(); }
+  $('userSelect').innerHTML = state.users.map(u=>`<option value="${u.id}">${u.name} — ${u.role}</option>`).join('');
+  $('userSelect').value='u1';
+  $('userSelect').addEventListener('change',render);
+  $('transferForm').addEventListener('submit',submitTransfer);
+  ['amount','sourceCurrency','destinationCurrency','recipient'].forEach(id=>$(id).addEventListener('input',renderPreview));
+  $('resetBtn').addEventListener('click',reset);
+  $('closeReceipt').addEventListener('click',()=>{$('receiptModal').style.display='none';});
+  $('receiptModal').addEventListener('click',e=>{if(e.target===$('receiptModal'))$('receiptModal').style.display='none';});
+  $('printReceipt').addEventListener('click',()=>window.print());
+  $('saveRate').addEventListener('click',()=>{
+    const val=Number($('rateInput').value);
+    if(!Number.isFinite(val)||val<=0){alert('Enter a positive rate.');return;}
+    state.rates['XAF:USD']=val;
+    // For demo consistency, update reciprocal USD:XAF as well.
+    state.rates['USD:XAF']=1/val;
+    saveState();render();alert('Sample rates updated in this browser only.');
+  });
+  render();
+})();
+</script>
+<style>@media print{body *{visibility:hidden}.receipt,.receipt *{visibility:visible}.receipt{display:flex!important;position:absolute;inset:0;background:white;padding:0}.receipt-box{box-shadow:none;max-width:none}.receipt-actions{display:none}}</style>
+</body>
+</html>
